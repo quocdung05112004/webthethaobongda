@@ -27,7 +27,6 @@ ob_start();
     </button>
 </div>
 
-<!-- Slick Slider CSS/JS -->
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css"/>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -37,7 +36,6 @@ ob_start();
     <h3 class="mb-3 mt-4"><?php echo $dm['ten'];?></h3>
 
     <?php
-    // Lấy sản phẩm của danh mục hiện tại
     $sql_sp = "SELECT * FROM san_pham WHERE danh_muc_id = ".$dm['id']." ORDER BY id DESC";
     $result_sp = $conn->query($sql_sp);
     
@@ -45,12 +43,18 @@ ob_start();
     ?>
     <div class="product-slider-<?php echo $dm['id']; ?> mb-4">
         <?php while($sp=$result_sp->fetch_assoc()): ?>
-            <div class="card product-card mx-2" style="min-width:200px;">
+            <div class="card product-card mx-2 position-relative" style="min-width:200px;">
                 <img src="../asset/upload/<?php echo $sp['hinh_anh'];?>" class="card-img-top" alt="<?php echo $sp['ten'];?>">
                 <div class="card-body d-flex flex-column">
                     <h6 class="card-title"><?php echo $sp['ten'];?></h6>
                     <p class="text-danger fw-bold"><?php echo number_format($sp['gia']);?> đ</p>
-                    <a href="product.php?id=<?php echo $sp['id'];?>" class="btn btn-primary mt-auto btn-sm">Xem chi tiết</a>
+                    <a href="product.php?id=<?php echo $sp['id'];?>" class="btn btn-primary mt-auto btn-sm mb-1">Xem chi tiết</a>
+                    <!-- Nút thêm vào giỏ hàng -->
+                    <button class="btn btn-success btn-sm add-to-cart" 
+                            data-id="<?php echo $sp['id'];?>" 
+                            style="margin-top:5px;">
+                        🛒 Thêm vào giỏ
+                    </button>
                 </div>
             </div>
         <?php endwhile; ?>
@@ -66,14 +70,13 @@ ob_start();
 <script>
 $(document).ready(function(){
     <?php
-    // Lặp lại từng danh mục để khởi tạo Slick riêng
-    $result_dm->data_seek(0); // reset pointer
+    $result_dm->data_seek(0);
     while($dm = $result_dm->fetch_assoc()):
     ?>
     $('.product-slider-<?php echo $dm['id']; ?>').slick({
         infinite: true,
-        slidesToShow: 4,    // số sản phẩm hiển thị cùng lúc
-        slidesToScroll: 1,  // trượt 1 sản phẩm mỗi lần
+        slidesToShow: 4,
+        slidesToScroll: 1,
         arrows: true,
         dots: false,
         autoplay: true,
@@ -85,6 +88,20 @@ $(document).ready(function(){
         ]
     });
     <?php endwhile; ?>
+
+    // ========== AJAX Thêm vào giỏ hàng ==========
+    $('.add-to-cart').click(function(){
+        var sp_id = $(this).data('id');
+        $.ajax({
+            url: 'add_cart.php',
+            type: 'POST',
+            data: {product_id: sp_id},
+            success: function(res){
+                alert('Đã thêm sản phẩm vào giỏ hàng!');
+                // TODO: update số lượng giỏ hàng trên navbar nếu muốn
+            }
+        });
+    });
 });
 </script>
 

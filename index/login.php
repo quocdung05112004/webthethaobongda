@@ -49,6 +49,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     session_regenerate_id(true);
                 }
 
+                // --- Hợp nhất giỏ hàng session vào DB ---
+                if(isset($_SESSION['cart']) && !empty($_SESSION['cart'])){
+                    $user_id = $user['id'];
+                    foreach($_SESSION['cart'] as $product_id => $item){
+                        $so_luong = intval($item['so_luong']);
+                        $res_cart = mysqli_query($conn,"SELECT * FROM gio_hang WHERE nguoi_dung_id=$user_id AND san_pham_id=$product_id");
+                        if(mysqli_num_rows($res_cart) > 0){
+                            mysqli_query($conn,"UPDATE gio_hang SET so_luong = so_luong + $so_luong WHERE nguoi_dung_id=$user_id AND san_pham_id=$product_id");
+                        } else {
+                            mysqli_query($conn,"INSERT INTO gio_hang(nguoi_dung_id, san_pham_id, so_luong) VALUES($user_id, $product_id, $so_luong)");
+                        }
+                    }
+                    unset($_SESSION['cart']); // Xóa giỏ hàng session sau khi hợp nhất
+                }
+                // --- Kết thúc hợp nhất ---
+
                 if ($user['vai_tro'] == 1) {
                     header('Location: ../view/admin/home.php');
                 } else {

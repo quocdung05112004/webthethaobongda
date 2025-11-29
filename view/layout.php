@@ -15,43 +15,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <title>Web Thể Thao</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-        }
-
-        body {
-            background-color: #f8f9fa;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .navbar-brand {
-            font-weight: bold;
-            color: #0d6efd !important;
-            font-size: 22px;
-        }
-
-        .product-card img {
-            height: 220px;
-            object-fit: cover;
-            width: 100%;
-        }
-
-        .container.flex-grow-1 {
-            flex: 1 0 auto; /* Nội dung chính chiếm không gian còn lại */
-        }
-
-        .footer {
-            background: #222;
-            padding: 20px 0;
-            color: #ccc;
-            margin-top: 30px;
-            flex-shrink: 0;
-        }
-    </style>
+    <link rel="stylesheet" href="../css/style.css">
 </head>
 
 <body>
@@ -68,7 +32,62 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <div class="collapse navbar-collapse" id="menu">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="index.php">Trang chủ</a></li>
-                    <li class="nav-item"><a class="nav-link" href="cart.php">Giỏ hàng</a></li>
+                    <!-- Giỏ hàng -->
+                    <!-- Giỏ hàng -->
+<li class="nav-item me-3">
+    <a class="nav-link position-relative" href="cart.php">
+        <i class="bi bi-cart-fill cart-icon"></i>
+        <span class="cart-count" id="cart-count">
+            <?php
+            // Lấy số lượng ban đầu
+            if(isset($_SESSION['cart'])){
+                echo count($_SESSION['cart']);
+            } elseif(isset($_SESSION['user'])){
+                include '../config/db.php';
+                $user_id = $_SESSION['user']['id'];
+                $res = mysqli_query($conn,"SELECT COUNT(*) AS total FROM gio_hang WHERE nguoi_dung_id=$user_id");
+                $row = mysqli_fetch_assoc($res);
+                echo $row['total'] ?? 0;
+            } else {
+                echo 0;
+            }
+            ?>
+        </span>
+    </a>
+</li>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+function updateCartCount(newCount){
+    $('#cart-count').text(newCount);
+}
+
+$(document).ready(function(){
+    // Khi nhấn thêm sản phẩm
+    $('.btn-add-cart').click(function(e){
+        e.preventDefault();
+        var sp_id = $(this).data('id');
+
+        $.post('add_cart.php', {product_id: sp_id, so_luong:1}, function(res){
+            // Lấy số lượng mới từ server
+            $.get('cart_count.php', function(count){
+                updateCartCount(count);
+            });
+        });
+    });
+
+    // Định kỳ đồng bộ giỏ hàng (tùy chọn, ví dụ 5s/lần)
+    setInterval(function(){
+        $.get('cart_count.php', function(count){
+            updateCartCount(count);
+        });
+    }, 1000);
+});
+</script>
+
 
                     <?php if (isset($_SESSION['user'])): ?>
                         <li class="nav-item">
@@ -101,7 +120,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
     <!-- FOOTER -->
     <div class="footer text-center">
-        <p>© 2025 SPORTSHOP - Web bán đồ thể thao</p>
+        <p>SPORTSHOP - Web bán đồ thể thao</p>
     </div>
 
     <!-- JS -->
