@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (password_verify($password, $stored)) {
                 $password_ok = true;
             } elseif ($password === $stored) {
-                    $password_ok = true; // dự phòng cho mật khẩu lưu plaintext trong DB mẫu
+                $password_ok = true; // dự phòng cho mật khẩu lưu plaintext trong DB mẫu
             }
 
             if ($password_ok) {
