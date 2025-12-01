@@ -61,46 +61,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 ob_start();
 ?>
-
-<h2>Đăng ký</h2>
-
 <?php if ($error): ?>
     <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
 <?php endif; ?>
 
-<form method="POST" class="mb-3">
-    <div class="mb-3">
-        <label class="form-label">Họ và tên*</label>
-        <input type="text" name="ho_ten" class="form-control" required value="<?php echo isset($ho_ten) ? htmlspecialchars($ho_ten) : ''; ?>">
-    </div>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <div class="mb-3">
-        <label class="form-label">Email*</label>
-        <input type="email" name="email" class="form-control" required value="<?php echo isset($email) ? htmlspecialchars($email) : ''; ?>">
-    </div>
+<link rel="stylesheet" href="../css/dangky.css">
 
-    <div class="mb-3">
-        <label class="form-label">Mật khẩu*</label>
-        <input type="password" name="password" class="form-control" required>
-    </div>
+<div class="register-wrapper">
+    <div class="register-card">
 
-    <div class="mb-3">
-        <label class="form-label">Xác nhận mật khẩu*</label>
-        <input type="password" name="password2" class="form-control" required>
-    </div>
+        <h3 class="register-title">Đăng ký tài khoản</h3>
 
-    <div class="mb-3">
-        <label class="form-label">Số điện thoại</label>
-        <input type="text" name="so_dien_thoai" class="form-control" value="<?php echo isset($so_dien_thoai) ? htmlspecialchars($so_dien_thoai) : ''; ?>">
-    </div>
+        <form method="POST">
 
-    <div class="mb-3">
-        <label class="form-label">Địa chỉ</label>
-        <input type="text" name="dia_chi" class="form-control" value="<?php echo isset($dia_chi) ? htmlspecialchars($dia_chi) : ''; ?>">
-    </div>
+            <div class="mb-3">
+                <label class="form-label">Họ và tên *</label>
+                <input type="text" name="ho_ten" class="form-control" required
+                       value="<?php echo isset($ho_ten) ? htmlspecialchars($ho_ten) : ''; ?>">
+            </div>
 
-    <button class="btn btn-success">Đăng ký</button>
-</form>
+            <div class="mb-3">
+                <label class="form-label">Email *</label>
+                <input type="email" name="email" class="form-control" required
+                       value="<?php echo isset($email) ? htmlspecialchars($email) : ''; ?>">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Mật khẩu *</label>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Xác nhận mật khẩu *</label>
+                <input type="password" name="password2" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Số điện thoại</label>
+                <input type="text" name="so_dien_thoai" class="form-control"
+                       value="<?php echo isset($so_dien_thoai) ? htmlspecialchars($so_dien_thoai) : ''; ?>">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Địa chỉ</label>
+                <input type="text" name="dia_chi" class="form-control"
+                       value="<?php echo isset($dia_chi) ? htmlspecialchars($dia_chi) : ''; ?>">
+            </div>
+
+            <button class="btn btn-success w-100 py-2 fs-5">Đăng ký</button>
+
+        </form>
+    </div>
+</div>
+
 
 <?php
 $content = ob_get_clean();

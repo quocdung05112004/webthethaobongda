@@ -1,0 +1,21 @@
+
+    body {
+        background: #f5f7fa;
+    }
+    .register-wrapper {
+        max-width: 500px;
+        margin: 40px auto;
+    }
+    .register-card {
+        background: #fff;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .register-title {
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 26px;
+        color: #333;
+    }
