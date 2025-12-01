@@ -33,8 +33,12 @@ ob_start();
 <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
 
 <?php while($dm = $result_dm->fetch_assoc()): ?>
-    <h3 class="mb-3 mt-4"><?php echo $dm['ten'];?></h3>
-
+    <h3 class="mb-3 mt-4">
+    <a href="category.php?id=<?php echo $dm['id']; ?>" 
+       style="text-decoration:none; color:#ff512f;">
+        <?php echo $dm['ten']; ?>
+    </a>
+    </h3>
     <?php
     $sql_sp = "SELECT * FROM san_pham WHERE danh_muc_id = ".$dm['id']." ORDER BY id DESC";
     $result_sp = $conn->query($sql_sp);
