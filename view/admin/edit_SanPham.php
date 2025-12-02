@@ -12,12 +12,17 @@ if (isset($_POST['update'])) {
     $gia = $_POST['gia'];
     $mo_ta = $_POST['mo_ta'];
 
-    $hinh = $data["hinh_anh"]; // giữ ảnh cũ
+    $hinh = $data["hinh_anh"]; // giữ ảnh cũ nếu không upload mới
 
     // Nếu có upload ảnh mới
     if (!empty($_FILES['hinh']['name'])) {
-        $hinh = "uploads/" . basename($_FILES["hinh"]["name"]);
-        move_uploaded_file($_FILES["hinh"]["tmp_name"], __DIR__ . "/uploads/" . basename($_FILES["hinh"]["name"]));
+        $ten_file = basename($_FILES["hinh"]["name"]);
+        $upload_dir = __DIR__ . "/../../asset/upload/";
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0777, true); // tạo thư mục nếu chưa có
+        }
+        move_uploaded_file($_FILES["hinh"]["tmp_name"], $upload_dir . $ten_file);
+        $hinh = "../../asset/upload/" . $ten_file; // đường dẫn lưu DB
     }
 
     $sql = "UPDATE san_pham SET 
@@ -50,7 +55,9 @@ ob_start();
 
     <label>Hình ảnh</label>
     <input class="form-control mb-2" type="file" name="hinh">
-    <img src="<?= $data['hinh_anh'] ?>" width="120">
+    <?php if ($data['hinh_anh']): ?>
+        <img src="<?= $data['hinh_anh'] ?>" width="120">
+    <?php endif; ?>
 
     <button type="submit" class="btn btn-success" name="update">Cập nhật</button>
 </form>
@@ -58,3 +65,4 @@ ob_start();
 <?php
 $content = ob_get_clean();
 include 'layout_admin.php';
+?>

@@ -15,7 +15,8 @@ ob_start(); // bắt đầu lưu giao diện con vào $content
     <?php while ($row = $result->fetch_assoc()) { ?>
         <div class="col-md-3 mb-4">
             <div class="card product-card">
-                <img src="uploads/<?php echo $row['hinh_anh']; ?>" class="card-img-top">
+                <!-- Sửa đường dẫn ả    nh -->
+                <img src="../asset/upload/<?php echo $row['hinh_anh']; ?>" class="card-img-top">
 
                 <div class="card-body">
                     <h5 class="card-title"><?php echo $row['ten']; ?></h5>
@@ -29,5 +30,5 @@ ob_start(); // bắt đầu lưu giao diện con vào $content
 </div>
 
 <?php
-$content = ob_get_clean(); // lấy nội dung
+$content = ob_get_clean();
 include '../view/layout.php';
