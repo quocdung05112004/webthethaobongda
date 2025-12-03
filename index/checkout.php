@@ -1,9 +1,39 @@
 <?php
 session_start();
+include '../config/db.php';
+
+if (!isset($_SESSION['user'])) {
+    header("Location: login.php");
+    exit;
+}
+
+$userId = $_SESSION['user']['id'];
+
+// Lấy giỏ hàng của user từ DB
+$stmt = $conn->prepare("
+    SELECT g.san_pham_id, g.so_luong, p.ten, p.gia
+    FROM gio_hang g
+    JOIN san_pham p ON g.san_pham_id = p.id
+    WHERE g.nguoi_dung_id = ?
+");
+$stmt->bind_param("i", $userId);
+$stmt->execute();
+$res = $stmt->get_result();
+
+$cartItems = [];
+$total = 0;
+while ($row = $res->fetch_assoc()) {
+    $row['total'] = $row['gia'] * $row['so_luong'];
+    $total += $row['total'];
+    $cartItems[] = $row;
+}
+
+$cartJson = json_encode($cartItems);
 ?>
 
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <title>Thanh toán</title>
@@ -11,75 +41,56 @@ session_start();
 </head>
 
 <body>
-
-<div class="container py-5">
-    <h3 class="mb-4">Thông tin thanh toán</h3>
-
-    <form action="process_checkout.php" method="POST" id="checkout-form">
-        <div class="row">
-            <div class="col-md-6">
-                <h5>Thông tin khách hàng</h5>
-
-                <div class="mb-3">
-                    <label class="form-label">Họ và tên</label>
-                    <input type="text" name="fullname" required class="form-control">
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Số điện thoại</label>
-                    <input type="text" name="phone" required class="form-control">
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Địa chỉ giao hàng</label>
-                    <input type="text" name="address" required class="form-control">
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <h5>Đơn hàng</h5>
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Sản phẩm</th>
-                            <th>SL</th>
-                            <th>Tổng</th>
-                        </tr>
-                    </thead>
-                    <tbody id="order-items"></tbody>
-                </table>
-
-                <h4 class="text-end">Tổng thanh toán: <span id="order-total">0 đ</span></h4>
-
-                <input type="hidden" name="order_json" id="order_json">
-                
-                <button class="btn btn-success w-100 mt-3">Xác nhận thanh toán</button>
-            </div>
+    <div class="container py-5">
+        <div class="mb-3">
+            <a href="index.php" class="btn btn-secondary">&larr; Trang chủ</a>
         </div>
-    </form>
-</div>
 
-<script>
-    let checkoutCart = JSON.parse(localStorage.getItem('checkout_cart') || '[]');
-    const tbody = document.getElementById('order-items');
-    let total = 0;
+        <h3 class="mb-4">Đơn hàng của bạn</h3>
 
-    checkoutCart.forEach(item => {
-        total += item.price * item.qty;
-        tbody.innerHTML += `
-            <tr>
-                <td>${item.name}</td>
-                <td>${item.qty}</td>
-                <td>${(item.price * item.qty).toLocaleString()} đ</td>
-            </tr>
-        `;
-    });
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th>SL</th>
+                    <th>Tổng</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($cartItems as $item): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($item['ten']) ?></td>
+                        <td><?= $item['so_luong'] ?></td>
+                        <td><?= number_format($item['total']) ?> đ</td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
 
-    document.getElementById('order-total').textContent = total.toLocaleString() + ' đ';
+        <h4 class="text-end">Tổng thanh toán: <?= number_format($total) ?> đ</h4>
 
-    // Gửi JSON sang PHP
-    document.getElementById('order_json').value = JSON.stringify(checkoutCart);
-</script>
+        <div class="d-flex gap-2 mt-3 justify-content-center">
+            <!-- Thanh toán -->
+            <form action="checkout_info.php" method="POST" class="w-25">
+                <input type="hidden" name="cart_json" value='<?= htmlspecialchars($cartJson, ENT_QUOTES) ?>'>
+                <input type="hidden" name="payment_type" value="now">
+                <button type="submit" class="btn btn-success w-100">Thanh Toán Ngay</button>
+            </form>
 
+
+            <form action="process_checkout.php" method="POST" class="w-25">
+                <input type="hidden" name="cart_json" value='<?= htmlspecialchars($cartJson, ENT_QUOTES) ?>'>
+                <input type="hidden" name="payment_type" value="later">
+                <button type="submit" class="btn btn-primary w-100">Thanh Toán Sau</button>
+            </form>
+
+            <form action="process_checkout.php" method="POST" class="w-25">
+                <input type="hidden" name="cart_json" value='<?= htmlspecialchars($cartJson, ENT_QUOTES) ?>'>
+                <input type="hidden" name="payment_type" value="cod">
+                <button type="submit" class="btn btn-info w-100">Thanh Toán Khi Nhận Hàng</button>
+            </form>
+        </div>
+    </div>
 </body>
+
 </html>

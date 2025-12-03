@@ -5,7 +5,7 @@ include __DIR__ . '/../config/db.php';
 // Nếu đã đăng nhập thì chuyển hướng
 if (isset($_SESSION['user']) && isset($_SESSION['user']['vai_tro'])) {
     if ($_SESSION['user']['vai_tro'] == 1) {
-        header('Location: ../view/admin/home.php');
+        header('Location: ../index/index.php');
         exit;
     } else {
         header('Location: index.php');
@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 session_regenerate_id(true);
 
                 if ($user['vai_tro'] == 1) {
-                    header('Location: ../view/admin/home.php');
+                    header('Location: ../index/index.php');
                 } else {
                     header('Location: index.php');
                 }

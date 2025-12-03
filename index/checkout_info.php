@@ -9,22 +9,27 @@ if (!isset($_SESSION['user'])) {
 
 $userId = $_SESSION['user']['id'];
 
-// Lấy giỏ hàng trực tiếp từ DB
-$sql = "SELECT gh.san_pham_id, gh.so_luong, sp.gia FROM gio_hang gh JOIN san_pham sp ON gh.san_pham_id=sp.id WHERE gh.nguoi_dung_id=?";
-$stmt = $conn->prepare($sql);
+// Lấy giỏ hàng hiện tại
+$stmt = $conn->prepare("
+    SELECT g.san_pham_id, g.so_luong, p.gia
+    FROM gio_hang g
+    JOIN san_pham p ON g.san_pham_id = p.id
+    WHERE g.nguoi_dung_id = ?
+");
 $stmt->bind_param("i", $userId);
 $stmt->execute();
-$result = $stmt->get_result();
+$res = $stmt->get_result();
 
-if ($result->num_rows == 0) {
-    echo "Giỏ hàng trống!";
+if ($res->num_rows == 0) {
+    // Giỏ hàng trống, về trang giỏ hàng
+    header("Location: cart.php");
     exit;
 }
 
 $totalAmount = 0;
 $cartItems = [];
 
-while ($row = $result->fetch_assoc()) {
+while ($row = $res->fetch_assoc()) {
     $thanhTien = $row['gia'] * $row['so_luong'];
     $totalAmount += $thanhTien;
     $cartItems[] = [
@@ -35,8 +40,8 @@ while ($row = $result->fetch_assoc()) {
     ];
 }
 
-// Thêm đơn mới
-$status = 'Chờ xử lý';
+// Tạo đơn hàng mới trạng thái "Chờ xét duyệt"
+$status = 'Chờ xét duyệt';
 $stmtOrder = $conn->prepare("INSERT INTO don_hang (nguoi_dung_id, tong_tien, trang_thai, ngay_dat) VALUES (?, ?, ?, NOW())");
 $stmtOrder->bind_param("ids", $userId, $totalAmount, $status);
 $stmtOrder->execute();
@@ -49,9 +54,9 @@ foreach ($cartItems as $item) {
     $stmtDetail->execute();
 }
 
-// Xóa giỏ hàng
+// Xóa giỏ hàng sau khi tạo đơn
 $conn->query("DELETE FROM gio_hang WHERE nguoi_dung_id=$userId");
 
-// Quay về danh sách đơn hàng
+// Quay về trang đơn hàng
 header("Location: don_hang.php");
 exit;

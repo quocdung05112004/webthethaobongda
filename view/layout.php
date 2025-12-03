@@ -267,14 +267,16 @@ while ($row = $result->fetch_assoc()) {
                             <i id="theme-icon" class="bi bi-moon-stars-fill"></i>
                         </a>
                     </li>
-                    <?php if (isset($_SESSION['user'])): ?>
+                    <?php if (isset($_SESSION['user'])):
+                        $hoTen = htmlspecialchars($_SESSION['user']['ho_ten'] ?? 'Người dùng');
+                    ?>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center gap-1" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle"></i>
+                                <i class="bi bi-person-circle"></i> <?php echo $hoTen; ?>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="profile.php"><i class="bi bi-person"></i> Hồ sơ</a></li>
-                                <li><a class="dropdown-item" href="orders.php"><i class="bi bi-card-list"></i> Đơn hàng</a></li>
+                                <li><a class="dropdown-item" href="don_hang.php"><i class="bi bi-card-list"></i> Đơn hàng</a></li>
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
@@ -284,6 +286,7 @@ while ($row = $result->fetch_assoc()) {
                     <?php else: ?>
                         <li class="nav-item"><a class="nav-link" href="login.php"><i class="bi bi-box-arrow-in-right"></i></a></li>
                     <?php endif; ?>
+
                 </ul>
             </div>
         </div>
@@ -419,10 +422,11 @@ while ($row = $result->fetch_assoc()) {
             min: null,
             max: null,
             sort: 'new',
-            page: 1,
+            page: parseInt(localStorage.getItem('productsPage')) || 1, // Lấy page từ localStorage nếu có
             perPage: 8,
             cart: JSON.parse(localStorage.getItem('cart') || '[]')
         };
+
 
         // ---------- HELPERS ----------
         function $(sel) {
@@ -491,6 +495,8 @@ while ($row = $result->fetch_assoc()) {
         }
 
         // ---------- RENDER GRID ----------
+        const isLoggedIn = <?php echo isset($_SESSION['user']) ? 'true' : 'false'; ?>;
+
         function applyFiltersAndRender() {
             const q = state.query.trim().toLowerCase();
             let filtered = window._PRODUCTS.slice();
@@ -536,30 +542,44 @@ while ($row = $result->fetch_assoc()) {
                 li.addEventListener('click', e => {
                     e.preventDefault();
                     state.page = i;
+                    localStorage.setItem('productsPage', i); // lưu page hiện tại
                     applyFiltersAndRender();
                 });
+
                 ul.appendChild(li);
             }
 
             // thêm sản phẩm vào c
-            $$('.add-cart-btn').forEach(btn => {
+            document.querySelectorAll('.add-cart-btn').forEach(btn => {
                 btn.onclick = function() {
-                    const id = this.dataset.id,
-                        name = this.dataset.name,
-                        price = parseInt(this.dataset.price),
-                        img = this.dataset.img;
-                    const existing = state.cart.find(x => x.id == id);
-                    if (existing) existing.qty += 1;
-                    else state.cart.push({
-                        id,
-                        name,
-                        price,
-                        qty: 1,
-                        img
-                    });
-                    refreshCartBadge();
-                    flyToCart(img, this.getBoundingClientRect());
-                    toast('Đã thêm ' + name + ' vào giỏ hàng');
+                    if (!isLoggedIn) {
+                        // Nếu chưa đăng nhập
+                        toast('Vui lòng đăng nhập để thêm sản phẩm vào giỏ', 'info', 2000);
+                        setTimeout(() => {
+                            window.location.href = 'login.php';
+                        }, 1500);
+                        return;
+                    }
+
+                    const id = this.dataset.id;
+                    const imgSrc = this.dataset.img;
+                    const imgRect = this.getBoundingClientRect();
+
+                    fetch('ajax_cart.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: `action=add&product_id=${id}`
+                        })
+                        .then(res => res.json())
+                        .then(res => {
+                            if (res.success) {
+                                toast('Đã thêm sản phẩm vào giỏ hàng');
+                                flyToCart(imgSrc, imgRect);
+                                refreshCartBadge();
+                            }
+                        });
                 }
             });
 
@@ -572,22 +592,57 @@ while ($row = $result->fetch_assoc()) {
                     $('#quick-desc').textContent = p.mo_ta || '';
                     const modal = new bootstrap.Modal($('#quickViewModal'));
                     modal.show();
+
                     $('#quick-add').onclick = function() {
-                        const existing = state.cart.find(x => x.id == p.id);
-                        if (existing) existing.qty += 1;
-                        else state.cart.push({
-                            id: p.id,
-                            name: p.ten,
-                            price: p.gia,
-                            qty: 1,
-                            img: p.hinh_anh
-                        });
-                        refreshCartBadge();
-                        toast('Đã thêm ' + p.ten + ' vào giỏ hàng');
-                        modal.hide();
-                    }
+                        if (!isLoggedIn) {
+                            toast('Vui lòng đăng nhập để thêm sản phẩm vào giỏ', 'info', 2000);
+                            setTimeout(() => {
+                                window.location.href = 'login.php';
+                            }, 1500);
+                            return;
+                        }
+
+                        fetch('ajax_cart.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded'
+                                },
+                                body: `action=add&product_id=${p.id}`
+                            })
+                            .then(res => res.json())
+                            .then(res => {
+                                if (res.success) {
+                                    toast('Đã thêm ' + p.ten + ' vào giỏ hàng');
+                                    refreshCartBadge();
+                                    const modal = bootstrap.Modal.getInstance($('#quickViewModal'));
+                                    modal.hide();
+                                }
+                            });
+                    };
                 }
             });
+
+            // ---------- REFRESH CART BADGE ----------
+            function refreshCartBadge() {
+                fetch('ajax_cart.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: 'action=count'
+                    })
+                    .then(res => res.json())
+                    .then(res => {
+                        const el = document.getElementById('cart-count');
+                        if (res.count > 0) {
+                            el.style.display = 'inline-block';
+                            el.textContent = res.count;
+                        } else {
+                            el.style.display = 'none';
+                        }
+                    });
+            }
+
         }
 
         // ---------- EVENTS ----------
