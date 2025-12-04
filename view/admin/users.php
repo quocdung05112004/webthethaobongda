@@ -1,5 +1,5 @@
 <?php
-// Bắt đầu session để kiểm tra vai trò nếu cần
+// sync update for github
 if (session_status() == PHP_SESSION_NONE) session_start();
 include __DIR__ . '/../../config/db.php';
 
