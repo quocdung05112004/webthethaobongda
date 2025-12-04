@@ -1,4 +1,5 @@
 <?php
+// sync update for github
 session_start();
 include '../config/db.php';
 
