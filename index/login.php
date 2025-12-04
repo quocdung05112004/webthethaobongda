@@ -5,7 +5,7 @@ include __DIR__ . '/../config/db.php';
 // Nếu đã đăng nhập thì chuyển hướng
 if (isset($_SESSION['user']) && isset($_SESSION['user']['vai_tro'])) {
     if ($_SESSION['user']['vai_tro'] == 1) {
-        header('Location: ../index/index.php');
+        header('Location: ../view/admin/home.php');
         exit;
     } else {
         header('Location: index.php');
